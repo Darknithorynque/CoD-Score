@@ -9,7 +9,6 @@ public class CoDResponse {
 
     double CoDScore;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "0.00")
     double TotalCalories;
 
     double RedPercent;
