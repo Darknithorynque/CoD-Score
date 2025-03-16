@@ -1,5 +1,6 @@
 package org.example;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import jakarta.validation.constraints.NotNull;
@@ -8,14 +9,15 @@ import jakarta.validation.constraints.NotNull;
 public class CoDRequest {
 
     @NotNull(message = "Red labelled meal calories cannot be null")
+    @Min(0)
     private double redLabelMealCalories;
 
     @NotNull(message = "Yellow labelled meal calories cannot be null")
-    @Positive
+    @Min(0)
     private double yellowLabelMealCalories;
 
     @NotNull(message = "Green labelled meal calories cannot be null")
-    @Positive
+    @Min(0)
     private double greenLabelMealCalories;
 
     @NotNull(message = "Age cannot be null")

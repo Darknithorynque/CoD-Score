@@ -1,21 +1,62 @@
 package org.example;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import lombok.Setter;
 
 @Data
 public class CoDResponse {
     String hexCode;
 
-    double CoDScore;
+    @Setter
+    private double coDScore;
 
-    double TotalCalories;
+    @Setter
+    private double totalCalories;
 
-    double RedPercent;
+    @Setter
+    private double redPercent;
 
-    double GreenPercent;
+    @Setter
+    private double greenPercent;
 
-    double YellowPercent;
+    @Setter
+    private double yellowPercent;
 
-    double IdealCalorieIntake;
+    @Setter
+    private double idealCalorieIntake;
+
+    // Method to format the number to 2 decimal places
+    private double formatNumber(double number) {
+        return Math.round(number * 100.0) / 100.0;
+    }
+
+    // Custom setter for totalCalories
+    public void setTotalCalories(double totalCalories) {
+        this.totalCalories = formatNumber(totalCalories);
+    }
+
+    // Custom setter for redPercent
+    public void setRedPercent(double redPercent) {
+        this.redPercent = formatNumber(redPercent);
+    }
+
+    // Custom setter for yellowPercent
+    public void setYellowPercent(double yellowPercent) {
+        this.yellowPercent = formatNumber(yellowPercent);
+    }
+
+    // Custom setter for greenPercent
+    public void setGreenPercent(double greenPercent) {
+        this.greenPercent = formatNumber(greenPercent);
+    }
+
+    // Custom setter for coDScore
+    public void setCoDScore(double coDScore) {
+        this.coDScore = formatNumber(coDScore);
+    }
+
+    // Custom setter for idealCalorieIntake
+    public void setIdealCalorieIntake(double idealCalorieIntake) {
+        this.idealCalorieIntake = formatNumber(idealCalorieIntake);
+    }
 }
