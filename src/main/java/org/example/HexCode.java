@@ -2,14 +2,13 @@ package org.example;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
 @Getter
 public enum HexCode {
     GREEN("#00ff00"),
-    DARK_GREEN("#0bda51"),
-    LIGHT_GREEN("#33cc33"),
+    MILD_GREEN("#0bda51"),
+    DARK_GREEN("#33cc33"),
     YELLOW("#ffff00"),
     GOLD("#fdda0d"),
     ORANGE("#ffbf00"),

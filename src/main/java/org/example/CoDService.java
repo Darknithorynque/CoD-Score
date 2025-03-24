@@ -2,6 +2,7 @@ package org.example;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +12,16 @@ public class CoDService {
     CoDResponse response = new CoDResponse();
 
     Logger logger = LoggerFactory.getLogger(CoDService.class);
+
+    @Value("${coefficient.red-color}")
+    private int redColorCoefficient;
+
+    @Value("${coefficient.yellow-color}")
+    private int yellowColorCoefficient;
+
+    @Value("${coefficient.green-color}")
+    private int greenColorCoefficient;
+
 
     public ResponseEntity<CoDResponse> colorOfDay(CoDRequest request) {
 
@@ -30,24 +41,29 @@ public class CoDService {
     public String calculateCoD(CoDRequest request) {
 
         try {
-            double idealCalorieIntake = CalculateIdealCalorieIntake(request.getHeight(), request.getWeight(), request.getAge(), request.getActivityLevel(), request.isSex());
+            double idealCalorieIntake = calculateIdealCalorieIntake(request.getHeight(), request.getWeight(), request.getAge(), request.getActivityLevel(), request.isSex());
             if (request.totalCalories() == 0 || idealCalorieIntake == 0) {
                 logger.warn("Total calories or ideal calorie intake is zero. Returning gray color.");
                 return HexCode.GRAY.getHexCode(); // Default to gray
             }
 
-            double modify = Math.max(0.81, Math.min(1.2, request.totalCalories()) / idealCalorieIntake);
-            double redPercentage = (request.getRedLabelMealCalories() / request.totalCalories()) * 100;
-            double yellowPercentage = (request.getYellowLabelMealCalories() / request.totalCalories()) * 100;
-            double greenPercentage = (request.getGreenLabelMealCalories() / request.totalCalories()) * 100;
+            double modify = Math.max(0.81, Math.min(1.2, (request.totalCalories() / idealCalorieIntake)));
+            double redPercentage = (request.getRedLabelMealCalories() * 100) / request.totalCalories();
+            double yellowPercentage = (request.getYellowLabelMealCalories() * 100) / request.totalCalories();
+            double greenPercentage = (request.getGreenLabelMealCalories() * 100) / request.totalCalories();
 
             response.setRedPercent(redPercentage);
             response.setYellowPercent(yellowPercentage);
             response.setGreenPercent(greenPercentage);
             response.setIdealCalorieIntake(idealCalorieIntake);
 
-            double score = ((redPercentage * 3) + (yellowPercentage * 2) + (greenPercentage * 1))
-                    * modify * (1 + 0.005 * redPercentage) * (1 + 0.0025 * yellowPercentage);
+            double redEffect =  (request.getRedLabelMealCalories()/ request.totalCalories())*redColorCoefficient;
+            double yellowEffect = (request.getYellowLabelMealCalories()/ request.totalCalories())*yellowColorCoefficient;
+            double greenEffect = (request.getGreenLabelMealCalories()/ request.totalCalories())*greenColorCoefficient;
+            System.out.println("Red: "+redEffect +" "+ redPercentage + "Yellow: "+ yellowEffect+ " Green: "+greenEffect + " modify: "+modify);
+
+            double score = (redEffect + yellowEffect+ greenEffect)
+                    * modify;
             response.setCoDScore(score);
 
             return getColorFromScore(score).getHexCode();
@@ -63,8 +79,8 @@ public class CoDService {
 
     private HexCode getColorFromScore(double score) {
         if (score >= 81 && score < 125) return HexCode.GREEN;
-        else if (score < 150) return HexCode.DARK_GREEN;
-        else if (score < 170) return HexCode.LIGHT_GREEN;
+        else if (score < 150) return HexCode.MILD_GREEN;
+        else if (score < 170) return HexCode.DARK_GREEN;
         else if (score < 190) return HexCode.YELLOW;
         else if (score < 210) return HexCode.GOLD;
         else if (score < 230) return HexCode.ORANGE;
@@ -77,11 +93,13 @@ public class CoDService {
     }
 
 
-    public double CalculateIdealCalorieIntake(double height, double weight, int age, ActivityLevel activityLevel, boolean sex) {
+    public double calculateIdealCalorieIntake(double height, double weight, int age, ActivityLevel activityLevel, boolean sex) {
 
         try {
             double bmrFormula = 10*weight + 6.25*height - 5*age;
             bmrFormula = sex ? bmrFormula + 5 : bmrFormula - 161;
+
+            double requiredCalorieDeficit = bodyMassIndexFactory(height,weight);
 
             double activityFactor = switch (activityLevel){
                 case SEDENTARY -> 1.2;
@@ -89,9 +107,10 @@ public class CoDService {
                 case MODERATELY_ACTIVE -> 1.55;
                 case VERY_ACTIVE -> 1.75;
             };
+            
 
             //to lose 0.75 to 1kg weekly
-            return activityFactor * bmrFormula - 500;
+            return activityFactor * bmrFormula - requiredCalorieDeficit;
         } catch (ArithmeticException e) {
             logger.error("Arithmetic error during CoD calculation: {}", e.getMessage(), e);
             throw new RuntimeException("Arithmetic error during CoD calculation.");
@@ -102,4 +121,25 @@ public class CoDService {
 
 
     }
+
+    public double bodyMassIndexFactory(double height, double weight){
+        double bmi =  weight/(height/100*height/100);
+        
+        if (bmi <= 18.5){
+            return -500;
+        } else if (bmi > 18.5 && bmi<= 24.9) {
+            return 0;
+        } else if (bmi > 24.9 && bmi <= 29.9) {
+            return 600;
+        } else if (bmi>29.9 && bmi <= 34.9) {
+            return 800;
+        } else if (bmi > 34.9 && bmi <= 39.9) {
+            return 1000;
+        } else if (bmi > 39.9) {
+            return 1300;
+        } else {
+            return 0;
+        }
+    }
+
 }
